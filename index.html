@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>مُصنّف الحيوانات</title>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      direction: rtl;
+      background-color: #f0f4f8;
+    }
+    h1 {
+      color: #333;
+      margin-top: 20px;
+    }
+    #upload-container {
+      margin: 20px;
+    }
+    #preview {
+      max-width: 300px;
+      margin: 15px auto;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    .result-box {
+      background-color: #d1f7d6;
+      border: 1px solid #4caf50;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px auto;
+      max-width: 300px;
+      font-size: 18px;
+      color: #2e7d32;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌟 مُصنّف الحيوانات الذكي 🐾</h1>
+  <div id="upload-container">
+    <input type="file" accept="image/*" onchange="previewImage(event)" />
+    <br /><br />
+    <img id="preview" src="#" alt="صورة المعاينة" style="display:none" />
+    <br />
+    <button onclick="predict()">تحديد الحيوان</button>
+  </div>
+  <div id="results"></div>
+
+  <script>
+    const URL = "https://teachablemachine.withgoogle.com/models/FshXBCONn/";
+
+    let model, maxPredictions;
+
+    async function loadModel() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+    }
+
+    loadModel();
+
+    function previewImage(event) {
+      const img = document.getElementById("preview");
+      img.src = URL.createObjectURL(event.target.files[0]);
+      img.style.display = "block";
+      // Clear previous results
+      document.getElementById("results").innerHTML = "";
+    }
+
+    async function predict() {
+      const image = document.getElementById("preview");
+      if (!image.src || image.style.display === "none") {
+        alert("يرجى رفع صورة أولاً");
+        return;
+      }
+      const predictions = await model.predict(image, false);
+      predictions.sort((a, b) => b.probability - a.probability);
+
+      const resultsContainer = document.getElementById("results");
+      resultsContainer.innerHTML = "";
+
+      predictions.forEach((p) => {
+        const box = document.createElement("div");
+        box.className = "result-box";
+        box.textContent = `${getArabicLabel(p.className)}: ${(p.probability * 100).toFixed(2)}٪`;
+        resultsContainer.appendChild(box);
+      });
+    }
+
+    function getArabicLabel(className) {
+      switch (className) {
+        case "Lion":
+          return "🦁 أسد";
+        case "Tiger":
+          return "🐯 نمر";
+        case "Rabbit":
+          return "🐰 أرنب";
+        default:
+          return className;
+      }
+    }
+  </script>
+</body>
+</html>
